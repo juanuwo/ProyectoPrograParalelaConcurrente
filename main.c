@@ -35,17 +35,18 @@ void generar_mandelbrot(unsigned char *imagen) {
 }
 
 void aplicar_filtro_sobel(unsigned char *imagen_in, unsigned char *imagen_out) {
-    printf("Iniciando Tarea B: Aplicando filtro Sobel (Paralelo)...\n");
+    printf("Iniciando Tarea B: Aplicando filtro Sobel (Vectorizado)...\n");
     int Gx[3][3] = {{-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
     int Gy[3][3] = {{-1, -2, -1}, {0, 0, 0}, {1, 2, 1}};
 
-    // Directiva de OpenMP para paralelizar el ciclo externo
-    #pragma omp parallel for
+    #pragma omp parallel for schedule(static)
     for (int y = 1; y < HEIGHT - 1; y++) {
         for (int x = 1; x < WIDTH - 1; x++) {
             int sum_x = 0;
             int sum_y = 0;
 
+            // Forzar vectorización uniendo los dos bucles internos (SPMD)
+            #pragma omp simd collapse(2) reduction(+:sum_x, sum_y)
             for (int ky = -1; ky <= 1; ky++) {
                 for (int kx = -1; kx <= 1; kx++) {
                     int pixel_val = imagen_in[(y + ky) * WIDTH + (x + kx)];
