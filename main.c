@@ -1,17 +1,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <time.h> // Librería agregada para medir el tiempo
+#include <time.h>
+#include <omp.h> // Librería de OpenMP agregada
 
 #define WIDTH 7680
 #define HEIGHT 4320
 #define MAX_ITER 256
 
 void generar_mandelbrot(unsigned char *imagen) {
-    printf("Iniciando Tarea A: Generando Mandelbrot 8K...\n");
+    printf("Iniciando Tarea A: Generando Mandelbrot 8K (Paralelo)...\n");
     double x_min = -2.0, x_max = 1.0;
     double y_min = -1.5, y_max = 1.5;
 
+    // Directiva de OpenMP para paralelizar el ciclo externo
+    #pragma omp parallel for
     for (int y = 0; y < HEIGHT; y++) {
         for (int x = 0; x < WIDTH; x++) {
             double c_re = x_min + (x * (x_max - x_min) / WIDTH);
@@ -32,10 +35,12 @@ void generar_mandelbrot(unsigned char *imagen) {
 }
 
 void aplicar_filtro_sobel(unsigned char *imagen_in, unsigned char *imagen_out) {
-    printf("Iniciando Tarea B: Aplicando filtro Sobel...\n");
+    printf("Iniciando Tarea B: Aplicando filtro Sobel (Paralelo)...\n");
     int Gx[3][3] = {{-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
     int Gy[3][3] = {{-1, -2, -1}, {0, 0, 0}, {1, 2, 1}};
 
+    // Directiva de OpenMP para paralelizar el ciclo externo
+    #pragma omp parallel for
     for (int y = 1; y < HEIGHT - 1; y++) {
         for (int x = 1; x < WIDTH - 1; x++) {
             int sum_x = 0;
@@ -84,18 +89,15 @@ int main() {
     double tiempo_total;
 
     printf("========================================\n");
-    printf("Iniciando procesamiento secuencial...\n");
+    printf("Iniciando procesamiento PARALELO BASE...\n");
 
-    // Iniciar el cronómetro
     clock_gettime(CLOCK_MONOTONIC, &start);
 
     generar_mandelbrot(img_original);
     aplicar_filtro_sobel(img_original, img_filtrada);
 
-    // Detener el cronómetro
     clock_gettime(CLOCK_MONOTONIC, &end);
 
-    // Calcular el tiempo transcurrido en segundos
     tiempo_total = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
 
     printf("========================================\n");
